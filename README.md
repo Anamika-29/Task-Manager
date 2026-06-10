@@ -1,37 +1,17 @@
 # TaskFlow — Task Management Dashboard
 
-A production-ready task management application built with Next.js 14, TypeScript, TanStack Query, ShadCN UI, Tailwind CSS, and PostgreSQL.
-
-## Repository Contents
-
-This repository includes:
-
-- Complete source code in `src/`
-- Next.js API routes under `src/app/api/`
-- Prisma schema and database configuration in `prisma/`
-- `README.md` with setup instructions
-- `.env.example` for environment variables
-- `package.json` and build scripts for development, production, and database tasks
+A production-ready Task Management application built with Next.js 14, TypeScript, TanStack Query, ShadCN UI, Tailwind CSS, and PostgreSQL.
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14 App Router, TypeScript
-- **Styling**: Tailwind CSS, ShadCN UI primitives
-- **Data fetching**: TanStack Query
-- **Forms/validation**: React Hook Form + Zod
-- **Backend**: Next.js API routes
-- **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: JWT tokens stored in httpOnly cookies
+- **Frontend**: Next.js 14 (App Router), TypeScript, TanStack Query, ShadCN UI, Tailwind CSS
+- **Backend**: Next.js API Routes, Zod validation
+- **Database**: PostgreSQL via Prisma ORM
+- **Auth**: JWT via `jose` library (httpOnly cookies)
 
-## Environment Setup
+## Getting Started
 
-### Prerequisites
-
-- Node.js 20+
-- npm 10+
-- PostgreSQL database
-
-### Install dependencies
+### 1. Clone and Install
 
 ```bash
 git clone <your-repo>
@@ -39,99 +19,72 @@ cd task-manager
 npm install
 ```
 
-### Configure environment variables
+### 2. Environment Variables
 
-Copy `.env.example` to `.env.local` or `.env` and update values:
+Copy `.env.example` to `.env.local` and fill in:
 
 ```env
 DATABASE_URL="postgresql://user:password@localhost:5432/taskmanager"
 JWT_SECRET="your-super-secret-jwt-key-min-32-chars"
-NEXTAUTH_URL="http://localhost:3000"
 ```
 
-- `DATABASE_URL`: PostgreSQL connection string
-- `JWT_SECRET`: at least 32 characters for token signing
-- `NEXTAUTH_URL`: local application URL for auth redirects
+> **Tip**: Use [Railway](https://railway.app) or [Neon](https://neon.tech) for a free hosted PostgreSQL database.
 
-### Generate Prisma client and initialize the database
+### 3. Database Setup
 
 ```bash
 npx prisma generate
-npx prisma db push
+npx prisma db push   # or: npx prisma migrate dev
 ```
 
-If you prefer migrations:
-
-```bash
-npx prisma migrate dev --name init
-```
-
-### Start the application
+### 4. Run Development Server
 
 ```bash
 npm run dev
 ```
 
-Open `http://localhost:3000` in your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
 ## Project Structure
 
 ```
 src/
-├── app/
-│   ├── api/auth/
-│   │   ├── login/route.ts
-│   │   ├── logout/route.ts
-│   │   └── register/route.ts
-│   ├── api/tasks/
-│   │   ├── route.ts
-│   │   └── [id]/route.ts
-│   ├── dashboard/page.tsx
-│   ├── login/page.tsx
-│   └── register/page.tsx
-├── components/
-│   ├── navbar.tsx
-│   ├── providers.tsx
-│   └── ui/
-├── features/
-│   ├── auth/
-│   └── tasks/
-├── hooks/
-├── lib/
-├── services/
-├── types/
-└── middleware.ts
+├── app/                  # Next.js App Router pages + API routes
+│   ├── api/auth/         # Register, Login, Logout endpoints
+│   ├── api/tasks/        # CRUD task endpoints
+│   ├── dashboard/        # Dashboard page (server component)
+│   ├── login/            # Login page
+│   └── register/         # Register page
+├── components/           # Shared UI components (Navbar, Providers)
+│   └── ui/               # ShadCN primitives
+├── features/             # Feature-based modules
+│   ├── auth/components/  # LoginForm, RegisterForm
+│   └── tasks/components/ # TaskCard, TaskList, TaskFormDialog, StatsCards
+├── hooks/                # Custom React hooks (use-tasks, use-auth, use-toast)
+├── lib/                  # Core utilities (prisma, auth, validations, utils)
+├── services/             # API call abstractions (auth.service, task.service)
+├── types/                # TypeScript interfaces
+└── middleware.ts          # Route protection
 ```
 
 ## Architecture Decisions
 
-- **App Router + Server Components**: Uses Next.js App Router for structured routing and server-rendered dashboard data.
-- **API route backend**: Lightweight backend within the same Next.js app, simplifying deployment and local development.
-- **JWT in httpOnly cookies**: Limits exposure to XSS and keeps auth tokens out of client-side storage.
-- **Prisma for data access**: Ensures type-safe database queries and a consistent schema definition.
-- **Feature-based file organization**: Keeps auth and task logic grouped by feature for maintainability.
-- **TanStack Query**: Provides caching, stale data handling, and optimistic updates for responsive task management.
+- **App Router + Server Components**: Dashboard page fetches initial user data server-side; interactive task UI runs client-side.
+- **JWT in httpOnly cookies**: More secure than localStorage; protected from XSS.
+- **Prisma + PostgreSQL**: Type-safe ORM with excellent DX; schema migrations via Prisma Migrate.
+- **TanStack Query**: Optimistic updates on task toggle/delete for instant UI feedback.
+- **Feature-based structure**: Each feature (auth, tasks) is self-contained; scales well as the app grows.
+- **Zod validation**: Shared schemas between frontend (react-hook-form) and backend API routes.
+
+## Deployment (Vercel)
+
+1. Push to GitHub
+2. Import repo on [vercel.com](https://vercel.com)
+3. Add environment variables in Vercel dashboard
+4. Deploy — Vercel auto-detects Next.js
 
 ## Assumptions
 
-- Each user manages a private task list, with no shared workspace or user-to-user collaboration.
-- Tasks are a single resource owned by a user and do not require complex relationships.
-- Authentication is session-based via JWT cookies; refresh tokens are not implemented.
-- The app is intended for small-scale productivity use rather than enterprise task management.
-
-## Deployment Notes
-
-- This app is ready for Vercel deployment.
-- Ensure environment variables are configured in the hosting platform.
-- The database should be accessible from the deployed app.
-
-## Useful Commands
-
-- `npm run dev` — start development server
-- `npm run build` — production build
-- `npm start` — start built app
-- `npm run lint` — run ESLint
-- `npm run format` — format code with Prettier
-- `npm run db:generate` — Prisma client generate
-- `npm run db:push` — push schema to database
-- `npm run db:migrate` — create Prisma migrations
+- Single-user tasks: each user only sees their own tasks
+- No real-time collaboration (no WebSockets needed)
+- Authentication uses JWT tokens valid for 7 days
